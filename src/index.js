@@ -36,6 +36,7 @@ function defaultGetTemplate(tpl) {
  * @return embedHTML
  */
 function getEmbedHTML(template, styles, opts = {}) {
+	// link的css全部请求并放入到style标签里
 	const { fetch = defaultFetch } = opts;
 	let embedHTML = template;
 
@@ -65,6 +66,7 @@ function getExecutableScript(scriptSrc, scriptText, proxy, strictGlobal) {
 }
 
 // for prefetch
+// 请求link的css并缓存下来
 export function getExternalStyleSheets(styles, fetch = defaultFetch) {
 	return Promise.all(styles.map(styleLink => {
 			if (isInlineCode(styleLink)) {
@@ -81,6 +83,7 @@ export function getExternalStyleSheets(styles, fetch = defaultFetch) {
 }
 
 // for prefetch
+// 把外链的js都请求并缓存下来
 export function getExternalScripts(scripts, fetch = defaultFetch, errorCallback = () => {
 }) {
 
@@ -221,10 +224,11 @@ export function execScripts(entry, scripts, proxy = window, opts = {}) {
 				if (i < scripts.length) {
 					const scriptSrc = scripts[i];
 					const inlineScript = scriptsText[i];
-
+					// ???? exec里 resolve后 下面还能不能继续执行 
 					exec(scriptSrc, inlineScript, resolvePromise);
 					// resolve the promise while the last script executed and entry not provided
 					if (!entry && i === scripts.length - 1) {
+						// 执行到最后一个script后resole退出
 						resolvePromise();
 					} else {
 						schedule(i + 1, resolvePromise);

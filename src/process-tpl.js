@@ -73,6 +73,7 @@ export default function processTpl(tpl, baseURI, postProcessTemplate) {
 			/*
 			change the css link
 			*/
+			// 把link元素都放到styles里
 			const styleType = !!match.match(STYLE_TYPE_REGEX);
 			if (styleType) {
 
@@ -112,6 +113,7 @@ export default function processTpl(tpl, baseURI, postProcessTemplate) {
 		})
 		.replace(ALL_SCRIPT_REGEX, (match, scriptTag) => {
 			const scriptIgnore = scriptTag.match(SCRIPT_IGNORE_REGEX);
+			// 支持moudle但是添加nomodule属性 或者 不支持module但写了type=module属性
 			const moduleScriptIgnore =
 				(moduleSupport && !!scriptTag.match(SCRIPT_NO_MODULE_REGEX)) ||
 				(!moduleSupport && !!scriptTag.match(SCRIPT_MODULE_REGEX));
@@ -129,7 +131,7 @@ export default function processTpl(tpl, baseURI, postProcessTemplate) {
 				collect scripts and replace the ref
 				*/
 
-				const matchedScriptEntry = scriptTag.match(SCRIPT_ENTRY_REGEX);
+				const matchedScriptEntry = scriptTag.match(SCRIPT_ENTRY_REGEX); // 标记是entry的（入口文件）
 				const matchedScriptSrcMatch = scriptTag.match(SCRIPT_SRC_REGEX);
 				let matchedScriptSrc = matchedScriptSrcMatch && matchedScriptSrcMatch[2];
 
@@ -141,7 +143,7 @@ export default function processTpl(tpl, baseURI, postProcessTemplate) {
 					if (matchedScriptSrc && !hasProtocol(matchedScriptSrc)) {
 						matchedScriptSrc = getEntirePath(matchedScriptSrc, baseURI);
 					}
-
+					// 记录入口文件 
 					entry = entry || matchedScriptEntry && matchedScriptSrc;
 				}
 
@@ -154,6 +156,7 @@ export default function processTpl(tpl, baseURI, postProcessTemplate) {
 				}
 
 				if (matchedScriptSrc) {
+					// 把外链的script存到scripts
 					const asyncScript = !!scriptTag.match(SCRIPT_ASYNC_REGEX);
 					scripts.push(asyncScript ? { async: true, src: matchedScriptSrc } : matchedScriptSrc);
 					return genScriptReplaceSymbol(matchedScriptSrc, asyncScript);
@@ -161,6 +164,7 @@ export default function processTpl(tpl, baseURI, postProcessTemplate) {
 
 				return match;
 			} else {
+				// html里的script
 				if (scriptIgnore) {
 					return genIgnoreAssetReplaceSymbol('js file');
 				}
@@ -176,6 +180,8 @@ export default function processTpl(tpl, baseURI, postProcessTemplate) {
 				const isPureCommentBlock = code.split(/[\r\n]+/).every(line => !line.trim() || line.trim().startsWith('//'));
 
 				if (!isPureCommentBlock) {
+
+					// 把这些也存到scripts里
 					scripts.push(match);
 				}
 
